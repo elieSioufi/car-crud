@@ -92,6 +92,86 @@ Le projet implemente les 5 portees de beans Spring :
 | Prototype   | `CarReportBuilder` | Ponctuel (nouvelle instance)  | Generateur de rapport            |
 | Application | `AppVisitCounter`  | Toute l'app, tous les users   | Compteur global de visites       |
 
+## Architecture globale
+
+```mermaid
+graph TB
+    subgraph Client
+        B[Navigateur]
+    end
+
+    subgraph Spring Security
+        SF[Security Filter Chain]
+    end
+
+    subgraph Intercepteur Web
+        RT[RequestTimer<br><i>@RequestScope</i>]
+        AV[AppVisitCounter<br><i>@ApplicationScope</i>]
+    end
+
+    subgraph Controllers
+        LC[LoginController]
+        UC[UserController]
+        AC[AdminCarController]
+        APC[AdminPurchaseController]
+        ARC[AdminRentalController]
+        APMC[AdminPaymentController]
+    end
+
+    subgraph Services
+        CS[CarService<br><i>@Singleton</i>]
+        PS[PurchaseService]
+        RS[RentalService]
+        PMS[PaymentRecordService]
+        CRB[CarReportBuilder<br><i>@Prototype</i>]
+    end
+
+    subgraph "Session Beans"
+        SC[SessionCart<br><i>@SessionScope</i>]
+    end
+
+    subgraph Repositories
+        CR[CarRepository]
+        PR[PurchaseRepository]
+        RR[RentalRepository]
+        PMR[PaymentRecordRepository]
+        UR[AppUserRepository]
+    end
+
+    subgraph "Base de donnees"
+        H2[(H2 Database)]
+    end
+
+    B --> SF
+    SF --> LC
+    SF --> UC
+    SF --> AC
+    SF --> APC
+    SF --> ARC
+    SF --> APMC
+
+    UC --> SC
+    UC --> CS
+    UC --> PS
+    AC --> CS
+    AC --> CRB
+    APC --> PS
+    ARC --> RS
+    APMC --> PMS
+
+    CS --> CR
+    PS --> PR
+    PS --> PMR
+    RS --> RR
+    PMS --> PMR
+
+    CR --> H2
+    PR --> H2
+    RR --> H2
+    PMR --> H2
+    UR --> H2
+```
+
 ## Base de donnees
 
 L'application utilise **H2 en mode fichier** (`./data/cardb`). Les donnees persistent entre les redemarrages.
