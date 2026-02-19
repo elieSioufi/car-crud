@@ -105,8 +105,8 @@ graph TB
     end
 
     subgraph Intercepteur Web
-        RT[RequestTimer<br><i>@RequestScope</i>]
-        AV[AppVisitCounter<br><i>@ApplicationScope</i>]
+        RT["RequestTimer - @RequestScope"]
+        AV["AppVisitCounter - @ApplicationScope"]
     end
 
     subgraph Controllers
@@ -119,15 +119,15 @@ graph TB
     end
 
     subgraph Services
-        CS[CarService<br><i>@Singleton</i>]
+        CS["CarService - @Singleton"]
         PS[PurchaseService]
         RS[RentalService]
         PMS[PaymentRecordService]
-        CRB[CarReportBuilder<br><i>@Prototype</i>]
+        CRB["CarReportBuilder - @Prototype"]
     end
 
-    subgraph "Session Beans"
-        SC[SessionCart<br><i>@SessionScope</i>]
+    subgraph Session Beans
+        SC["SessionCart - @SessionScope"]
     end
 
     subgraph Repositories
