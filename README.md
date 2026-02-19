@@ -4,18 +4,6 @@ Application web de gestion de voitures avec location et achat, construite avec S
 
 **Objectif principal** : Demonstrer les 5 portees (scopes) des beans Spring dans un contexte reel.
 
-## Prerequis
-
-- **Java 17** ou superieur
-- **Maven 3.8+** (ou utiliser le wrapper `./mvnw` inclus)
-
-## Lancer l'application
-
-```bash
-./mvnw spring-boot:run
-```
-
-L'application demarre sur **http://localhost:8080**
 
 ## Identifiants de connexion
 
@@ -23,7 +11,6 @@ L'application demarre sur **http://localhost:8080**
 |-------------|---------------|-------|--------|
 | admin       | adminpass     | ADMIN | Admin  |
 | elie        | eliepass      | USER  | Elie   |
-| john        | johnpass      | USER  | John   |
 
 ## Fonctionnalites
 
