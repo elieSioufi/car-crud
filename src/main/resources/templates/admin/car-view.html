@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Details</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>Car Details</h1>
+            <div class="detail-card">
+                <div class="field">
+                    <div class="label">Id</div>
+                    <div class="value" th:text="${car.id}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Type</div>
+                    <div class="value" th:text="${car.type}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Brand</div>
+                    <div class="value" th:text="${car.brand}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Model</div>
+                    <div class="value" th:text="${car.model}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Purchase Date</div>
+                    <div class="value" th:text="${car.purchaseDate}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Max Speed</div>
+                    <div class="value" th:text="${car.maxSpeed}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Passengers</div>
+                    <div class="value" th:text="${car.passengers}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Automatic Transmission</div>
+                    <div class="value" th:text="${car.automaticTransmission} ? 'Yes' : 'No'"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Sold</div>
+                    <div class="value" th:text="${car.sold} ? 'Yes' : 'No'"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Price</div>
+                    <div class="value" th:text="${car.price}"></div>
+                </div>
+                <div class="detail-actions">
+                    <a th:href="@{/admin/cars/{id}/edit(id=${car.id})}" class="btn btn-primary">Edit</a>
+                    <a th:href="@{/admin/cars}" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

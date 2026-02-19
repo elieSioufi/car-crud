@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchases - List</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>All Purchases</h1>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Buyer</th>
+                            <th>Car</th>
+                            <th>Type</th>
+                            <th>Price</th>
+                            <th>Purchase Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="purchase : ${purchases}">
+                            <td th:text="${purchase.id}"></td>
+                            <td th:text="${purchase.user.firstName + ' ' + purchase.user.lastName}"></td>
+                            <td th:text="${purchase.car.brand + ' ' + purchase.car.model}"></td>
+                            <td th:text="${purchase.car.type}"></td>
+                            <td th:text="${purchase.price + ' EUR'}"></td>
+                            <td th:text="${purchase.purchaseDate}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${#lists.isEmpty(purchases)}" class="empty-cart" style="margin-top: 24px;">
+                <p>No purchases have been made yet.</p>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

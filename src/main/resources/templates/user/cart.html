@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/user-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>My Cart</h1>
+
+            <!-- Success banner -->
+            <div th:if="${success}" class="success-banner" th:text="${success}"></div>
+
+            <div th:if="${#lists.isEmpty(cartCars)}" class="empty-cart">
+                <div class="empty-cart-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+                <p>Your cart is empty</p>
+                <a th:href="@{/buy}" class="btn btn-primary">Browse Cars</a>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(cartCars)}">
+                <div class="cart-items">
+                    <div class="cart-item" th:each="car : ${cartCars}">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name" th:text="${car.brand + ' ' + car.model}">Car Name</div>
+                            <div class="cart-item-details">
+                                <span class="cart-detail" th:text="${car.type}">Type</span>
+                                <span class="cart-detail" th:text="${car.passengers + ' seats'}">Seats</span>
+                                <span class="cart-detail" th:text="${car.maxSpeed + ' km/h'}">Speed</span>
+                            </div>
+                        </div>
+                        <div class="cart-item-price" th:text="${car.price + ' EUR'}">Price</div>
+                        <form th:action="@{/cart/remove}" method="post" class="cart-remove-form">
+                            <input type="hidden" name="carId" th:value="${car.id}">
+                            <button type="submit" class="btn-cart-remove" title="Remove from cart">&times;</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="cart-footer">
+                    <div class="cart-total">
+                        <span class="cart-total-label">Total:</span>
+                        <span class="cart-total-value" th:text="${cartTotal} + ' EUR'">0 EUR</span>
+                    </div>
+                    <form th:action="@{/cart/buy}" method="post">
+                        <button type="submit" class="btn btn-primary">Buy All</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

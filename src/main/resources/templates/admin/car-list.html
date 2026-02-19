@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cars - List</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>List</h1>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Type</th>
+                            <th>Brand</th>
+                            <th>Model</th>
+                            <th>Purchase Date</th>
+                            <th>MaxSpeed</th>
+                            <th>Passengers</th>
+                            <th>Automatic Transmission</th>
+                            <th>Sold</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="car : ${cars}">
+                            <td th:text="${car.id}"></td>
+                            <td th:text="${car.type}"></td>
+                            <td th:text="${car.brand}"></td>
+                            <td th:text="${car.model}"></td>
+                            <td th:text="${car.purchaseDate}"></td>
+                            <td th:text="${car.maxSpeed}"></td>
+                            <td th:text="${car.passengers}"></td>
+                            <td th:text="${car.automaticTransmission} ? 'Yes' : 'No'"></td>
+                            <td th:text="${car.sold} ? 'Yes' : 'No'"></td>
+                            <td th:text="${car.price}"></td>
+                            <td class="actions">
+                                <a th:href="@{/admin/cars/{id}(id=${car.id})}" class="view">View</a>
+                                <a th:href="@{/admin/cars/{id}/edit(id=${car.id})}" class="edit">Edit</a>
+                                <form th:action="@{/admin/cars/{id}/delete(id=${car.id})}" method="post" style="display:inline"
+                                      onsubmit="return confirm('Delete this car?')">
+                                    <button type="submit" class="delete">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

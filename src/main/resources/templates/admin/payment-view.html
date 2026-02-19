@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Details</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>Payment Details</h1>
+            <div class="detail-card">
+                <div class="field">
+                    <div class="label">Id</div>
+                    <div class="value" th:text="${payment.id}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Currency</div>
+                    <div class="value" th:text="${payment.currency}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">IBAN</div>
+                    <div class="value" th:text="${payment.iban}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Owner Name</div>
+                    <div class="value" th:text="${payment.ownerName}"></div>
+                </div>
+                <div class="field">
+                    <div class="label">Amount</div>
+                    <div class="value" th:text="${payment.amount}"></div>
+                </div>
+                <div class="detail-actions">
+                    <a th:href="@{/admin/payments/{id}/edit(id=${payment.id})}" class="btn btn-primary">Edit</a>
+                    <a th:href="@{/admin/payments}" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

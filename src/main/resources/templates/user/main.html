@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/user-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>Main</h1>
+            <div class="welcome-card">
+                <h2>Welcome, <span th:text="${currentUser?.firstName}">User</span>!</h2>
+                <p>Use the sidebar to navigate. You can rent or buy a car from our premium collection.</p>
+                <div class="links">
+                    <a th:href="@{/rent}">Rent a car</a>
+                    <a th:href="@{/buy}">Buy a car</a>
+                </div>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rentals - List</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>List</h1>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>User</th>
+                            <th>Car</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Days</th>
+                            <th>Comment</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="rental : ${rentals}">
+                            <td th:text="${rental.id}"></td>
+                            <td th:text="${rental.user.username}"></td>
+                            <td th:text="${rental.car.brand + ' ' + rental.car.model}"></td>
+                            <td th:text="${rental.startDate}"></td>
+                            <td th:text="${rental.endDate}"></td>
+                            <td th:text="${rental.days}"></td>
+                            <td th:text="${rental.comment}"></td>
+                            <td th:text="${rental.status}"></td>
+                            <td th:text="${rental.createdAt}"></td>
+                            <td class="actions">
+                                <th:block th:if="${rental.status.name() == 'REQUESTED'}">
+                                    <form th:action="@{/admin/rentals/{id}/approve(id=${rental.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="approve">Approve</button>
+                                    </form>
+                                    <form th:action="@{/admin/rentals/{id}/reject(id=${rental.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="delete">Reject</button>
+                                    </form>
+                                </th:block>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

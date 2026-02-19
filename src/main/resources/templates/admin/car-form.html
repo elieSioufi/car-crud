@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${carForm.id != null} ? 'Edit Car' : 'Create New Car'">Car Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1 th:text="${carForm.id != null} ? 'Edit Car' : 'Create New Car'">Car Form</h1>
+            <div class="form-container">
+                <form th:action="${carForm.id != null} ? @{/admin/cars/{id}/edit(id=${carForm.id})} : @{/admin/cars}"
+                      th:object="${carForm}" method="post">
+
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" th:field="*{type}">
+                            <option value="">-- Select --</option>
+                            <option th:each="t : ${carTypes}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        <input type="text" id="brand" th:field="*{brand}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">Model</label>
+                        <input type="text" id="model" th:field="*{model}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="purchaseDate">Purchase Date</label>
+                        <input type="date" id="purchaseDate" th:field="*{purchaseDate}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxSpeed">Max Speed</label>
+                        <input type="number" id="maxSpeed" th:field="*{maxSpeed}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="passengers">Passengers</label>
+                        <input type="number" id="passengers" th:field="*{passengers}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Automatic Transmission</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="automaticTransmission" th:field="*{automaticTransmission}">
+                            <label for="automaticTransmission">Yes</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sold</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="sold" th:field="*{sold}">
+                            <label for="sold">Yes</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Price</label>
+                        <input type="number" id="price" th:field="*{price}" step="0.01">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a th:href="@{/admin/cars}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

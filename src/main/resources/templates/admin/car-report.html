@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Report</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>Car Inventory Report</h1>
+
+            <div class="report-grid">
+                <div class="report-stat-card">
+                    <div class="report-stat-value" th:text="${report.totalCount}">0</div>
+                    <div class="report-stat-label">Total Cars</div>
+                </div>
+                <div class="report-stat-card report-stat-available">
+                    <div class="report-stat-value" th:text="${report.availableCount}">0</div>
+                    <div class="report-stat-label">Available</div>
+                </div>
+                <div class="report-stat-card report-stat-sold">
+                    <div class="report-stat-value" th:text="${report.soldCount}">0</div>
+                    <div class="report-stat-label">Sold</div>
+                </div>
+                <div class="report-stat-card">
+                    <div class="report-stat-value" th:text="${report.totalValue} + ' EUR'">0 EUR</div>
+                    <div class="report-stat-label">Total Inventory Value</div>
+                </div>
+            </div>
+
+            <div class="report-details">
+                <div class="detail-card">
+                    <h2 class="report-section-title">Price Statistics</h2>
+                    <div class="field">
+                        <div class="label">Average Price</div>
+                        <div class="value" th:text="${report.averagePrice} + ' EUR'">0 EUR</div>
+                    </div>
+                    <div class="field">
+                        <div class="label">Lowest Price</div>
+                        <div class="value" th:text="${report.minPrice} + ' EUR'">0 EUR</div>
+                    </div>
+                    <div class="field">
+                        <div class="label">Highest Price</div>
+                        <div class="value" th:text="${report.maxPrice} + ' EUR'">0 EUR</div>
+                    </div>
+                </div>
+
+                <div class="detail-card" th:if="${report.typeBreakdown != null and !report.typeBreakdown.isEmpty()}">
+                    <h2 class="report-section-title">Cars by Type</h2>
+                    <div class="field" th:each="entry : ${report.typeBreakdown}">
+                        <div class="label" th:text="${entry.key}">Type</div>
+                        <div class="value" th:text="${entry.value}">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="top-actions" style="margin-top: 24px;">
+                <a th:href="@{/admin/cars}" class="btn btn-secondary">Back to Car List</a>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments - List</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1>List</h1>
+            <div class="top-actions">
+                <a th:href="@{/admin/payments/new}" class="btn btn-primary">New Payment Record</a>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Currency</th>
+                            <th>IBAN</th>
+                            <th>Owner Name</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="payment : ${payments}">
+                            <td th:text="${payment.id}"></td>
+                            <td th:text="${payment.currency}"></td>
+                            <td th:text="${payment.iban}"></td>
+                            <td th:text="${payment.ownerName}"></td>
+                            <td th:text="${payment.amount}"></td>
+                            <td class="actions">
+                                <a th:href="@{/admin/payments/{id}(id=${payment.id})}" class="view">View</a>
+                                <a th:href="@{/admin/payments/{id}/edit(id=${payment.id})}" class="edit">Edit</a>
+                                <form th:action="@{/admin/payments/{id}/delete(id=${payment.id})}" method="post" style="display:inline"
+                                      onsubmit="return confirm('Delete this payment record?')">
+                                    <button type="submit" class="delete">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

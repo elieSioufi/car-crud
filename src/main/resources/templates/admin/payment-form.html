@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${paymentForm.id != null} ? 'Edit Payment' : 'New Payment Record'">Payment Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="layout">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <div class="main-content">
+            <h1 th:text="${paymentForm.id != null} ? 'Edit Payment' : 'New Payment Record'">Payment Form</h1>
+            <div class="form-container">
+                <form th:action="${paymentForm.id != null} ? @{/admin/payments/{id}/edit(id=${paymentForm.id})} : @{/admin/payments}"
+                      th:object="${paymentForm}" method="post">
+
+                    <div class="form-group">
+                        <label for="currency">Currency</label>
+                        <input type="text" id="currency" th:field="*{currency}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="iban">IBAN</label>
+                        <input type="text" id="iban" th:field="*{iban}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ownerName">Owner Name</label>
+                        <input type="text" id="ownerName" th:field="*{ownerName}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" th:field="*{amount}" step="0.01" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a th:href="@{/admin/payments}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+
+            <!-- Request scope footer -->
+            <div class="page-footer" th:if="${requestTimeMs != null}">
+                Page generated in <strong th:text="${requestTimeMs}">0</strong>ms
+                &mdash; Total visits: <strong th:text="${totalVisits}">0</strong>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
