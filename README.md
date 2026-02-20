@@ -92,6 +92,133 @@ Le projet implemente les 5 portees de beans Spring :
 | Prototype   | `CarReportBuilder` | Ponctuel (nouvelle instance)  | Generateur de rapport            |
 | Application | `AppVisitCounter`  | Toute l'app, tous les users   | Compteur global de visites       |
 
+## JPA / ORM — Entites et Relations
+
+Le projet utilise **Spring Data JPA** avec **Hibernate** comme ORM (Object-Relational Mapping). Les classes Java sont mappees automatiquement vers des tables SQL dans la base H2.
+
+### Annotations JPA utilisees
+
+| Annotation | Role | Exemple |
+|---|---|---|
+| `@Entity` | Declare une classe comme entite JPA (mappee a une table) | Toutes les entites |
+| `@Table(name = "...")` | Definit le nom de la table SQL | `@Table(name = "app_user")` |
+| `@Id` | Cle primaire de la table | `private Long id` |
+| `@GeneratedValue(strategy = GenerationType.IDENTITY)` | Auto-increment de l'ID | Toutes les entites |
+| `@Column(nullable = false)` | Colonne obligatoire (NOT NULL) | `username`, `brand`, `model` |
+| `@Column(unique = true)` | Valeur unique en base | `AppUser.username` |
+| `@Column(precision = 10, scale = 2)` | Precision decimale pour les prix | `BigDecimal price` |
+| `@Enumerated(EnumType.STRING)` | Stocke un enum en tant que texte (pas un entier) | `CarType`, `RentalStatus` |
+| `@ManyToOne(fetch = FetchType.EAGER)` | Relation plusieurs-a-un (charge l'objet lie immediatement) | `Purchase.user`, `Rental.car` |
+| `@JoinColumn(name = "...")` | Definit la colonne de cle etrangere | `@JoinColumn(name = "user_id")` |
+| `@PrePersist` | Methode executee avant l'insertion en base | Auto-set `purchaseDate`, `createdAt` |
+
+### Entites et leurs relations
+
+```mermaid
+erDiagram
+    APP_USER {
+        Long id PK
+        String username UK
+        String password
+        String role
+        String firstName
+        String lastName
+    }
+
+    CAR {
+        Long id PK
+        CarType type
+        String brand
+        String model
+        LocalDate purchaseDate
+        int maxSpeed
+        int passengers
+        boolean automaticTransmission
+        boolean sold
+        BigDecimal price
+    }
+
+    PURCHASE {
+        Long id PK
+        Long user_id FK
+        Long car_id FK
+        LocalDateTime purchaseDate
+        BigDecimal price
+    }
+
+    RENTAL {
+        Long id PK
+        Long user_id FK
+        Long car_id FK
+        LocalDate startDate
+        LocalDate endDate
+        int days
+        String comment
+        RentalStatus status
+        LocalDateTime createdAt
+    }
+
+    PAYMENT_RECORD {
+        Long id PK
+        String currency
+        String iban
+        String ownerName
+        BigDecimal amount
+    }
+
+    APP_USER ||--o{ PURCHASE : "achete"
+    APP_USER ||--o{ RENTAL : "loue"
+    CAR ||--o{ PURCHASE : "est achete"
+    CAR ||--o{ RENTAL : "est loue"
+    PURCHASE ..o| PAYMENT_RECORD : "genere"
+```
+
+### Detail des relations
+
+**`Purchase` → `AppUser`** : `@ManyToOne` — Un utilisateur peut faire plusieurs achats, mais chaque achat appartient a un seul utilisateur.
+```java
+@ManyToOne(fetch = FetchType.EAGER)
+@JoinColumn(name = "user_id", nullable = false)
+private AppUser user;
+```
+
+**`Purchase` → `Car`** : `@ManyToOne` — Chaque achat concerne une voiture. La colonne `car_id` est la cle etrangere.
+```java
+@ManyToOne(fetch = FetchType.EAGER)
+@JoinColumn(name = "car_id", nullable = false)
+private Car car;
+```
+
+**`Rental` → `AppUser`** : `@ManyToOne` — Un utilisateur peut faire plusieurs locations.
+```java
+@ManyToOne(fetch = FetchType.EAGER)
+@JoinColumn(name = "user_id", nullable = false)
+private AppUser user;
+```
+
+**`Rental` → `Car`** : `@ManyToOne` — Chaque location concerne une voiture.
+```java
+@ManyToOne(fetch = FetchType.EAGER)
+@JoinColumn(name = "car_id", nullable = false)
+private Car car;
+```
+
+**`Purchase` → `PaymentRecord`** : Liaison logique (pas de `@OneToOne` en base). Lors d'un achat, un `PaymentRecord` est cree automatiquement dans `PurchaseService` avec l'IBAN `"PURCHASE-{id}"`.
+
+### Repositories (Spring Data JPA)
+
+Les repositories heritent de `JpaRepository<Entity, ID>` qui fournit automatiquement les methodes CRUD (`findAll()`, `findById()`, `save()`, `deleteById()`, etc.) sans ecrire de SQL.
+
+| Repository | Entite | Methodes personnalisees |
+|---|---|---|
+| `CarRepository` | `Car` | `findBySoldFalse()` — voitures disponibles |
+| `AppUserRepository` | `AppUser` | `findByUsername(String)` — recherche par login |
+| `PurchaseRepository` | `Purchase` | — (CRUD de base) |
+| `RentalRepository` | `Rental` | — (CRUD de base) |
+| `PaymentRecordRepository` | `PaymentRecord` | — (CRUD de base) |
+
+> Spring Data JPA genere automatiquement les requetes SQL a partir du nom de la methode. Par exemple, `findBySoldFalse()` genere : `SELECT * FROM car WHERE sold = false`.
+
 ## Architecture globale
 
 ```mermaid
