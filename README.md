@@ -170,7 +170,7 @@ erDiagram
     APP_USER ||--o{ RENTAL : "loue"
     CAR ||--o{ PURCHASE : "est achete"
     CAR ||--o{ RENTAL : "est loue"
-    PURCHASE ..o| PAYMENT_RECORD : "genere"
+    PURCHASE ||--o| PAYMENT_RECORD : "genere"
 ```
 
 ### Detail des relations
