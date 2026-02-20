@@ -1,6 +1,8 @@
 package com.examples.carcrud.dto;
 
 import com.examples.carcrud.model.CarType;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -10,6 +12,8 @@ public class CarForm {
     private CarType type;
     private String brand;
     private String model;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate purchaseDate;
     private int maxSpeed;
     private int passengers;
