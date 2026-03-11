@@ -2,15 +2,13 @@
 
 ## Sommaire
 
-1. [Le besoin](#1-le-besoin)
-2. [Installer RabbitMQ](#2-installer-rabbitmq)
-3. [Creer le projet bank-service](#3-creer-le-projet-bank-service)
-4. [Integrer RabbitMQ dans car-crud](#4-integrer-rabbitmq-dans-car-crud)
-5. [Connecter les deux services](#5-connecter-les-deux-services)
-6. [Ajouter le journal des operations](#6-ajouter-le-journal-des-operations)
-7. [Ajouter l'API REST](#7-ajouter-lapi-rest)
-8. [Tester l'ensemble](#8-tester-lensemble)
-9. [Architecture finale](#9-architecture-finale)
+ [Creer le projet bank-service](#3-creer-le-projet-bank-service)
+ [Integrer RabbitMQ dans car-crud](#4-integrer-rabbitmq-dans-car-crud)
+ [Connecter les deux services](#5-connecter-les-deux-services)
+ [Ajouter le journal des operations](#6-ajouter-le-journal-des-operations)
+ [Ajouter l'API REST](#7-ajouter-lapi-rest)
+ [Tester l'ensemble](#8-tester-lensemble)
+ [Architecture finale](#9-architecture-finale)
 
 ---
 
@@ -44,26 +42,13 @@ graph LR
     end
 ```
 
-### Pourquoi RabbitMQ et pas un appel HTTP direct ?
-
-| Appel HTTP direct | RabbitMQ |
-|---|---|
-| Si bank-service est down → erreur immediate | Le message attend dans la queue → traite quand le service revient |
-| Couplage fort entre les services | Couplage faible — chaque service ne connait que les queues |
-| Synchrone uniquement | Supporte l'asynchrone et le synchrone |
-| Pas de garantie de livraison | Messages durables — survivent a un redemarrage |
 
 ---
 
-## 2. Installer RabbitMQ
+
 
 RabbitMQ est un **broker de messages** — un serveur intermediaire qui recoit, stocke et distribue les messages entre applications.
 
-### Avec Docker (recommande)
-
-```bash
-docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
-```
 
 | Port | Utilisation |
 |------|-------------|
