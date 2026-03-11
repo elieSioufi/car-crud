@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/h2-console/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/main", "/rent", "/buy", "/cart/**").hasRole("USER")
+                .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/login").permitAll()
                 .anyRequest().authenticated()
             )
@@ -57,8 +58,9 @@ public class SecurityConfig {
                 .permitAll()
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**")
+                .ignoringRequestMatchers("/h2-console/**", "/api/**")
             )
+            .httpBasic(basic -> {})
             .headers(headers -> headers
                 .frameOptions(frame -> frame.sameOrigin())
             );

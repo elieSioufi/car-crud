@@ -1,4 +1,4 @@
-# Car CRUD - Plateforme de Location et Achat de Voitures
+    # Car CRUD - Plateforme de Location et Achat de Voitures
 
 Application web de gestion de voitures avec location et achat, construite avec Spring Boot, Thymeleaf et H2.
 
@@ -298,6 +298,284 @@ graph TB
     PMR --> H2
     UR --> H2
 ```
+
+## RabbitMQ — Communication Asynchrone avec le Service Bancaire
+
+Le projet utilise **RabbitMQ** comme broker de messages pour communiquer de maniere asynchrone avec un microservice bancaire (`bank-service`). Chaque operation d'achat ou de location passe par une verification de credit aupres de la banque avant d'etre validee.
+
+### Principe general
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant CC as car-crud (port 8080)
+    participant RMQ as RabbitMQ (port 5672)
+    participant BS as bank-service (port 8081)
+
+    U->>CC: Acheter / Louer une voiture
+    CC->>CC: Valider la requete
+    CC->>RMQ: Envoyer CreditRequest<br/>(credit.request.queue)
+    RMQ->>BS: Distribuer le message
+    BS->>BS: Verifier le credit disponible<br/>(limite: 10 000 EUR/utilisateur)
+    BS->>RMQ: Envoyer CreditResponse<br/>(credit.response.queue)
+    RMQ->>CC: Distribuer la reponse
+    alt Credit approuve
+        CC->>CC: Creer l'achat/location + log
+        CC->>U: Succes !
+    else Credit refuse
+        CC->>CC: Logger le refus
+        CC->>U: Erreur : credit insuffisant
+    end
+```
+
+### Architecture RabbitMQ
+
+```mermaid
+graph LR
+    subgraph "car-crud (port 8080)"
+        CRP[CreditRequestPublisher]
+        CRL[CreditResponseListener]
+    end
+
+    subgraph "RabbitMQ (port 5672)"
+        Q1[credit.request.queue]
+        Q2[credit.response.queue]
+    end
+
+    subgraph "bank-service (port 8081)"
+        BS[BankService]
+        BC[BankController]
+    end
+
+    CRP -->|"convertAndSend()"| Q1
+    Q1 -->|"@RabbitListener"| BS
+    BS -->|"convertAndSend()"| Q2
+    Q2 -->|"@RabbitListener"| CRL
+```
+
+### Diagramme de classes — RabbitMQ
+
+```mermaid
+classDiagram
+    class CreditRequest {
+        -String correlationId
+        -String username
+        -BigDecimal amount
+        -String operationType
+    }
+
+    class CreditResponse {
+        -String correlationId
+        -String username
+        -boolean approved
+        -String message
+    }
+
+    class CreditRequestPublisher {
+        -RabbitTemplate rabbitTemplate
+        -ConcurrentHashMap~String, CompletableFuture~ pendingRequests
+        +verifyCreditAndWait(username, amount, operationType) CreditResponse
+        +completeRequest(response) void
+    }
+
+    class CreditResponseListener {
+        -CreditRequestPublisher creditRequestPublisher
+        +handleBankResponse(response) void
+    }
+
+    class RabbitMQConfig {
+        +CREDIT_REQUEST_QUEUE$ String
+        +CREDIT_RESPONSE_QUEUE$ String
+        +creditRequestQueue() Queue
+        +creditResponseQueue() Queue
+        +jsonMessageConverter() MessageConverter
+    }
+
+    class BankService {
+        -BigDecimal DEFAULT_CREDIT_LIMIT$
+        -Map~String, BigDecimal~ usedCredit
+        -RabbitTemplate rabbitTemplate
+        +handleCreditRequest(request) void
+        +getCreditLimit() BigDecimal
+        +getUsedCredit(username) BigDecimal
+        +getRemainingCredit(username) BigDecimal
+    }
+
+    class BankController {
+        -BankService bankService
+        +getCreditInfo(username) ResponseEntity
+        +getAllCredits() ResponseEntity
+    }
+
+    CreditRequestPublisher --> CreditRequest : envoie
+    CreditResponseListener --> CreditResponse : recoit
+    CreditRequestPublisher <-- CreditResponseListener : completeRequest()
+    BankService --> CreditRequest : recoit
+    BankService --> CreditResponse : envoie
+    BankController --> BankService : utilise
+
+    RentalService --> CreditRequestPublisher : verifyCreditAndWait()
+    PurchaseService --> CreditRequestPublisher : verifyCreditAndWait()
+```
+
+### Les deux files (queues) RabbitMQ
+
+| Queue | Direction | Producteur | Consommateur | Contenu |
+|-------|-----------|------------|--------------|---------|
+| `credit.request.queue` | car-crud → bank-service | `CreditRequestPublisher` | `BankService` | Demande de verification de credit |
+| `credit.response.queue` | bank-service → car-crud | `BankService` | `CreditResponseListener` | Decision de la banque (approuve/refuse) |
+
+Les deux queues sont **durables** (`new Queue(name, true)`) — elles survivent a un redemarrage de RabbitMQ.
+
+### Les DTOs echanges
+
+**`CreditRequest`** — Envoye par car-crud vers la banque :
+```java
+public class CreditRequest implements Serializable {
+    private String correlationId;   // UUID unique pour matcher requete/reponse
+    private String username;        // Utilisateur qui demande le credit
+    private BigDecimal amount;      // Montant demande (prix voiture ou cout location)
+    private String operationType;   // "RENT" ou "BUY"
+}
+```
+
+**`CreditResponse`** — Retourne par la banque :
+```java
+public class CreditResponse implements Serializable {
+    private String correlationId;   // Meme UUID que la requete
+    private String username;        // Utilisateur concerne
+    private boolean approved;       // true = approuve, false = refuse
+    private String message;         // Details ("Remaining credit: 5000 EUR" ou "Insufficient credit...")
+}
+```
+
+### Mecanisme de correlation (Request-Reply Pattern)
+
+Le defi principal est que RabbitMQ est **asynchrone** mais le controleur web a besoin d'une **reponse synchrone** pour afficher le resultat. Voici comment le pattern Request-Reply est implemente :
+
+```mermaid
+sequenceDiagram
+    participant PS as PurchaseService
+    participant CRP as CreditRequestPublisher
+    participant RMQ as RabbitMQ
+    participant BS as BankService
+    participant CRL as CreditResponseListener
+
+    PS->>CRP: verifyCreditAndWait("elie", 10000, "BUY")
+    CRP->>CRP: Generer UUID (correlationId)
+    CRP->>CRP: Creer CompletableFuture<br/>pendingRequests.put(correlationId, future)
+    CRP->>RMQ: convertAndSend(credit.request.queue, request)
+    CRP->>CRP: future.get(10, SECONDS) — BLOQUE
+
+    RMQ->>BS: handleCreditRequest(request)
+    BS->>BS: Verifier credit restant
+    BS->>RMQ: convertAndSend(credit.response.queue, response)
+
+    RMQ->>CRL: handleBankResponse(response)
+    CRL->>CRP: completeRequest(response)
+    CRP->>CRP: pendingRequests.get(correlationId).complete(response)
+    CRP-->>PS: Retourner CreditResponse (debloque)
+```
+
+**Etapes cles :**
+1. `CreditRequestPublisher` genere un **UUID** comme `correlationId`
+2. Il cree un `CompletableFuture` et le stocke dans une `ConcurrentHashMap<correlationId, Future>`
+3. Il envoie le message a RabbitMQ puis **bloque** avec `future.get(10, SECONDS)`
+4. La banque traite la requete et renvoie une reponse avec le **meme correlationId**
+5. `CreditResponseListener` recoit la reponse et appelle `completeRequest(response)`
+6. Le `CompletableFuture` est complete, ce qui **debloque** `verifyCreditAndWait()`
+
+**Timeout** : Si la banque ne repond pas dans les 10 secondes, une `RuntimeException` est levee.
+
+### Logique de la banque (`bank-service`)
+
+La banque maintient un **compteur de credit utilise par utilisateur** en memoire (`ConcurrentHashMap`).
+
+```
+Limite de credit par defaut : 10 000 EUR / utilisateur
+
+Si montant_demande <= credit_restant :
+    → APPROUVE (credit deduit)
+Sinon :
+    → REFUSE (pas de deduction)
+```
+
+**Exemple :**
+1. Elie achete une voiture a 8 000 EUR → **Approuve** (reste 2 000 EUR)
+2. Elie loue une voiture pour 300 EUR → **Approuve** (reste 1 700 EUR)
+3. Elie achete une voiture a 5 000 EUR → **Refuse** (seulement 1 700 EUR disponibles)
+
+> **Note** : Le credit est stocke en memoire — il se reinitialise au redemarrage de `bank-service`.
+
+### API REST de la banque
+
+Le `bank-service` expose aussi une API REST pour consulter l'etat du credit :
+
+| Endpoint | Methode | Description |
+|----------|---------|-------------|
+| `/api/bank/credit/{username}` | GET | Credit d'un utilisateur (limite, utilise, restant) |
+| `/api/bank/credits` | GET | Credit de tous les utilisateurs |
+
+**Exemple de reponse** `GET /api/bank/credit/elie` :
+```json
+{
+    "username": "elie",
+    "creditLimit": 10000,
+    "usedCredit": 8000,
+    "remainingCredit": 2000
+}
+```
+
+### Journal des operations (`OperationLog`)
+
+Chaque demande de credit (approuvee ou refusee) est enregistree dans la table `operation_log` :
+
+```mermaid
+erDiagram
+    OPERATION_LOG {
+        Long id PK
+        String username
+        Long carId
+        String carDescription
+        String operationType
+        BigDecimal amount
+        boolean approved
+        String bankMessage
+        LocalDateTime timestamp
+    }
+```
+
+Consultable via l'API REST : `GET /api/operations`
+
+### Configuration RabbitMQ
+
+Les deux microservices utilisent la **meme configuration** de connexion :
+
+```properties
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+```
+
+Les messages sont serialises en **JSON** via `Jackson2JsonMessageConverter`.
+
+### Demarrer l'ensemble
+
+```bash
+# 1. Demarrer RabbitMQ (Docker)
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
+
+# 2. Demarrer le service bancaire (port 8081)
+cd bank-service
+mvn spring-boot:run
+
+# 3. Demarrer l'application principale (port 8080)
+cd car-crud
+mvn spring-boot:run
+```
+
+Console RabbitMQ : **http://localhost:15672** (guest / guest)
 
 ## Base de donnees
 

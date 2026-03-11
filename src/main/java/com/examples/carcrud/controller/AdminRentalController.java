@@ -1,34 +1,23 @@
 package com.examples.carcrud.controller;
 
 import com.examples.carcrud.model.RentalStatus;
-import com.examples.carcrud.service.AppUserService;
 import com.examples.carcrud.service.RentalService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 @Controller
 @RequestMapping("/admin/rentals")
 public class AdminRentalController {
 
     private final RentalService rentalService;
-    private final AppUserService appUserService;
 
-    public AdminRentalController(RentalService rentalService, AppUserService appUserService) {
+    public AdminRentalController(RentalService rentalService) {
         this.rentalService = rentalService;
-        this.appUserService = appUserService;
     }
 
     @GetMapping
-    public String list(Model model, Principal principal) {
-        if (principal != null) {
-            var user = appUserService.findByUsername(principal.getName());
-            if (user != null) {
-                model.addAttribute("currentUser", user);
-            }
-        }
+    public String list(Model model) {
         model.addAttribute("rentals", rentalService.findAll());
         return "admin/rental-list";
     }
